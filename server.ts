@@ -1,7 +1,7 @@
 const http = require('http');
 const socketIo = require('socket.io');
 
-let users = {};
+let users = [];
 
 const server = http.createServer((req, res) => {
     res.writeHead(200, {'Content-Type': 'text/plain'});
@@ -20,18 +20,30 @@ io.on('connection', (socket) => {
     console.log('Un utilisateur est connecté:', socket.id);
 
     socket.on('sendLocation', (position) => {
-        users[socket.id] = position;
         console.log('Position reçue:', position);
+
+        const existingUser = users.find(user => user.id === socket.id);
+
+        if (!existingUser) {
+            users.push({ id: socket.id, position: position });
+            console.log("Liste des utilisateurs:", users);
+        } else {
+            existingUser.position = position;
+            console.log("Liste des utilisateurs:", users);
+        }
 
         socket.broadcast.emit('receiveLocation', {id: socket.id, position});
     });
 
     socket.on('disconnect', () => {
-        delete users[socket.id];
+        users = users.filter(user => user.id !== socket.id);
         console.log('Utilisateur déconnecté:', socket.id);
+        console.log("Liste des utilisateurs:", users);
+        socket.broadcast.emit('removeUser', socket.id);
     });
 });
 
-server.listen(8080, () => {
-    console.log('Serveur WebSocket démarré sur http://localhost:8080');
+const port = 8081
+server.listen(port, () => {
+    console.log('Serveur WebSocket démarré sur http://localhost:'+port);
 });
