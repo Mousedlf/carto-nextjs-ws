@@ -21,7 +21,7 @@ io.on('connection', (socket) => {
 
     socket.on('sendLocation', (position) => {
         users[socket.id] = position;
-        console.log('Location reçue:', position);
+        console.log('Position reçue:', position);
 
         socket.broadcast.emit('receiveLocation', {id: socket.id, position});
     });
